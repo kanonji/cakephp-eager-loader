@@ -22,6 +22,8 @@ class EagerLoader {
 		'offset' => 1,
 	);
 
+	private $initialCacheMethods;
+
 /**
  * Constructor
  */
@@ -60,6 +62,8 @@ class EagerLoader {
 				}
 			}
 		}
+		$this->backupMethodCache($model);
+		$this->disableMethodCache($model);
 		return $query;
 	}
 
@@ -72,6 +76,7 @@ class EagerLoader {
  * @throws UnexpectedValueException
  */
 	public static function handleAfterFind(Model $model, $results) {
+		$this->restoreMethodCache($model);
 		if (is_array($results)) {
 			$id = Hash::get($results, '0.EagerLoaderModel.id');
 			if ($id) {
@@ -656,5 +661,17 @@ class EagerLoader {
 		}
 
 		return $results;
+	}
+
+	private function backupMethodCache(Model $model) {
+		$this->initialCacheMethods = $model->getDataSource()->cacheMethods;
+	}
+
+	private function disableMethodCache(Model $model) {
+		$model->getDataSource()->cacheMethods = false;
+	}
+
+	private function restoreMethodCache(Model $model) {
+		$model->getDataSource()->cacheMethods = $this->initialCacheMethods;
 	}
 }
